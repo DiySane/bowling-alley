@@ -129,11 +129,11 @@ class Game:
 
 def main():
     player1 = Player(1, "A")
-    player2 = Player(2, "A")
-    player3 = Player(3, "A")
-    player4 = Player(4, "A")
-    player5 = Player(5, "A")
-    player6 = Player(6, "A")
+    player2 = Player(2, "B")
+    player3 = Player(3, "C")
+    player4 = Player(4, "D")
+    player5 = Player(5, "E")
+    player6 = Player(6, "F")
     players = []
     players.append(player1)
     players.append(player2)
