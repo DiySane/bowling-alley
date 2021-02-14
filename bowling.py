@@ -24,7 +24,10 @@ next frame. Say, p1 starts bowling frame1, followed by p2, p3... that
 also bowl frame1 after which p1 steps in to bowl frame2.'''
 
 
-def get_random_score():
+def get_random_score(remaining):
+    return random.randint(0, remaining)
+
+def get_random_score_ten():
     return random.randint(0, 10)
 
 
@@ -55,52 +58,59 @@ class Player:
         self.current_frame = None
         self.current_score = None
 
-    def play_match(self):
-        self.play_frame()
+    def play_match(self, frame_id):
+        self.play_frame(frame_id)
+
+    def play_frame(self, frame_id):
+        self.score_list = []
+        self.current_frame_id = frame_id
+        self.current_frame = Frame(self.current_frame_id)
+        self.frame_list.append(self.current_frame)
+        self.play_ball(frame_id)
         for i in range(len(self.score_list)):
             is_strike = self.score_list[i].frame.is_strike
             is_spare = self.score_list[i].frame.is_spare
             if(is_strike):
-                self.total_score += self.score_list[i].score
-                if(i + 2 < len(self.score_list)):
-                    self.total_score += self.score_list[i+1].score + self.score_list[i+2].score
+                self.score_list[i].frame.frame_score += self.score_list[i].score
+                print("Strike: {}".format(self.score_list[i].score))
+                # if(i + 2 < len(self.score_list)):
+                # self.score_list[i].frame.frame_score += self.score_list[i+1].score + self.score_list[i+2].score
                 continue
             elif(is_spare):
-                self.total_score += self.score_list[i].score
-                if(i + 2 < len(self.score_list)):
-                    self.total_score += self.score_list[i+1].score + self.score_list[i+2].score
+                self.score_list[i].frame.frame_score += self.score_list[i].score
+                print("Spare: {}".format(self.score_list[i].score))
+                # if(i + 2 < len(self.score_list)):
+                # self.score_list[i].frame.frame_score += self.score_list[i+1].score + self.score_list[i+2].score
                 i += 1
             else:
-                self.total_score += self.score_list[i].score
+                self.score_list[i].frame.frame_score += self.score_list[i].score
+                print("Rest: {}".format(self.score_list[i].score))
+        # self.play_frame()
 
-    def play_frame(self):
-        if(self.current_frame_id <= 10):
-            self.current_frame_id += 1
-            self.current_frame = Frame(self.current_frame_id)
-            self.frame_list.append(self.current_frame)
-            self.play_ball()
-            self.play_frame()
-        else:
-            return
-
-    def play_ball(self):
+    def play_ball(self, frame_id):
         if(self.current_frame.ball_count > 0 and self.current_frame.pin_count > 0):
             self.current_score = Score(self.current_frame)
             self.score_list.append(self.current_score)
-            self.current_score.score = self.get_score()
+            self.current_score.score = self.get_score(self.current_frame.pin_count)
             self.current_score.frame.ball_count -= 1
             self.current_frame.pin_count -= self.current_score.score
             if(self.current_frame.pin_count == 0):
                 if(self.current_score.frame.ball_count == 1):
+                    current_score_amt = 0
+                    for i in self.score_list:
+                        current_score_amt += i.score
+                    if(frame_id == 9 and current_score_amt < 30):
+                        self.current_score.frame.ball_count += 1
                     self.current_score.frame.is_strike = True
                 else:
                     self.current_score.frame.is_spare = True
-            self.play_ball()
+            self.play_ball(frame_id)
         else:
             return
 
-    def get_score(self):
-        return get_random_score()
+    def get_score(self, pin_count):
+        return get_random_score(pin_count)
+        # return get_random_score_ten()
 
     def __str__(self):
         return "Name: " + str(self.name) + ", Score: " + str(self.total_score)
@@ -114,14 +124,19 @@ class Game:
         max_score = 0
         # for player in self.player_list:
         #     print(player)
-        for player in self.player_list:
-            player.play_match()
-            print("The player with id: {}, name: {} has scored: {}".format(player.ident, player.name, player.total_score))
-            if(player.total_score > max_score):
-                max_score = player.total_score
-                self.winner = player
-            else:
-                continue
+        count = 0
+        while (count < 10):
+            for player in self.player_list:
+                player.play_match(count)
+                print("The player with id: {}, name: {} for frame: {} has scored: {}".format(player.ident, player.name, str(count), player.frame_list[count].frame_score))
+                if(player.total_score > max_score):
+                    max_score = player.total_score
+                    self.winner = player
+                else:
+                    continue
+            count += 1
+        # for player in self.player_list:
+
         return
 
     def get_winner(self):
@@ -146,6 +161,9 @@ def main():
     game = Game(players)
     game.set_winner()
     print("The winner is: \n{}".format(game.get_winner()))
+
+    print("\n-----------------------------------\n")
+    print(get_random_score_ten())
 
 if __name__ == "__main__":
     main()
